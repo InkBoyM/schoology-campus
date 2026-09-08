@@ -30,6 +30,24 @@
     return s;
   }
 
+  // Like text(), but joins top-level child nodes with a space so adjacent
+  // elements can't fuse ("1.78 / 2" + "89%" stays "1.78 / 2 89%").
+  function cellText(td) {
+    if (!td) return '';
+    var clone = td.cloneNode(true);
+    var hidden = clone.querySelectorAll('.visually-hidden');
+    for (var i = 0; i < hidden.length; i++) {
+      hidden[i].remove();
+    }
+    var parts = [];
+    var nodes = clone.childNodes;
+    for (var j = 0; j < nodes.length; j++) {
+      var s = ((nodes[j].textContent || '').replace(/\s+/g, ' ')).trim();
+      if (s) parts.push(s);
+    }
+    return parts.join(' ');
+  }
+
   var courseItems = document.querySelectorAll('li.s-grades-course-item');
   if (!courseItems.length) {
     alert(
@@ -92,12 +110,13 @@
         contrib = contribEl.textContent.replace(/[()]/g, '').replace(/\s+/g, ' ').trim() || null;
         contribEl.remove();
       }
-      var rowTitle = text(titleTd);
-      var gradeText = cleanGrade(text(gradeTd));
+      var rowTitle = cellText(titleTd);
+      var gradeText = cleanGrade(cellText(gradeTd));
       var commentText = null;
       if (commentTd) {
-        var c = text(commentTd);
-        if (c && c !== 'No comment') commentText = c;
+        var c = cellText(commentTd);
+        // Schoology pads empty comments with an invisible braille-blank.
+        if (c && c !== 'No comment' && c.replace(/⠇/g, '').trim()) commentText = c;
       }
 
       if (classes.indexOf('period-row') !== -1) {

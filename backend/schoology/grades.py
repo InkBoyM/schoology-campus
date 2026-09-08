@@ -96,26 +96,28 @@ def parse_grades_html(html_content: str) -> List[Dict[str, Any]]:
                 contrib_el.decompose()
 
             # Strip visually-hidden tags
+            # Strip visually-hidden tags (separator=" " keeps adjacent elements
+            # like "1.78 / 2" and "89%" from fusing into "1.78 / 289%")
             for vh in title_td.select(".visually-hidden"):
                 vh.decompose()
-            row_title = " ".join(title_td.get_text().split())
+            row_title = " ".join(title_td.get_text(separator=" ").split())
 
             # Extract grade
             grade_text = None
             if grade_td:
                 for vh in grade_td.select(".visually-hidden"):
                     vh.decompose()
-                g_val = " ".join(grade_td.get_text().split())
+                g_val = " ".join(grade_td.get_text(separator=" ").split())
                 if g_val and g_val != "—":
                     grade_text = g_val
 
-            # Extract comments
+            # Extract comments (⠇ is Schoology's invisible empty-comment placeholder)
             comment_text = None
             if comment_td:
                 for vh in comment_td.select(".visually-hidden"):
                     vh.decompose()
-                c_val = " ".join(comment_td.get_text().split())
-                if c_val and c_val != "No comment":
+                c_val = " ".join(comment_td.get_text(separator=" ").split())
+                if c_val and c_val != "No comment" and c_val.replace("⠇", "").strip():
                     comment_text = c_val
 
             # Hierarchy matching

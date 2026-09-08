@@ -42,8 +42,12 @@ export interface SchoologyCourse {
 // Grade string parsing.
 // Schoology grade strings look like:
 //   course/category: "A+ ( 99.07% )" | "100%" | null
-//   item:            "10 / 10" | null
+//   item:            "10 / 10" | "1.78 / 2" (+ "89%") | null
 //   weight:          "15%" | null
+//
+// NOTE: grade cells often contain the fraction AND a percent as adjacent
+// elements ("1.78 / 2" + "89%"), which scraping can fuse into "1.78 / 289%".
+// parseItemPoints detects and repairs that fusion (see below).
 // ---------------------------------------------------------------------------
 
 export interface ParsedCourseGrade {
@@ -51,7 +55,7 @@ export interface ParsedCourseGrade {
 	percentage: number;
 }
 
-const LETTER_PCT_RE = /^([A-F][+-]?)\s*\(\s*([\d.]+)%\s*\)$/i;
+const LETTER_PCT_RE = /([A-F][+-]?)\s*\(\s*([\d.]+)%\s*\)/i;
 const PCT_ONLY_RE = /^([\d.]+)%$/;
 const POINTS_RE = /(-?[\d.]+)\s*\/\s*(-?[\d.]+)/;
 const PCT_ANY_RE = /(-?[\d.]+)\s*%/;
@@ -114,6 +118,12 @@ export function parseCourseGradeString(grade: string | null | undefined): Parsed
 		if (isNaN(pct)) return undefined;
 		return { letter: letterForPercentage(pct), percentage: pct };
 	}
+	// Letterless fraction ("6.53 / 7", possibly fused with its percent).
+	const frac = parseItemPoints(t);
+	if (frac && frac.possible > 0) {
+		const pct = (frac.earned / frac.possible) * 100;
+		return { letter: letterForPercentage(pct), percentage: pct };
+	}
 	// Bare letter (rare) — no percentage available.
 	if (/^[A-F][+-]?$/i.test(t)) return { letter: t.toUpperCase(), percentage: NaN };
 	return undefined;
@@ -122,18 +132,52 @@ export function parseCourseGradeString(grade: string | null | undefined): Parsed
 /** Parse "10 / 10" (or "10/10", "Score: 10 / 10", ...) into {earned, possible}.
  * Falls back to a trailing "95%" as {earned: 95, possible: 100}.
  * Returns undefined when ungraded. Points are preferred over any status words
- * (e.g. "0 / 20" counts as a zero even if marked missing). */
+ * (e.g. "0 / 20" counts as a zero even if marked missing).
+ *
+ * Fusion repair: scraping can glue a fraction to its percent ("1.78 / 2" +
+ * "89%" -> "1.78 / 289%"). When a stated percent disagrees with the raw
+ * fraction, every split of the fused digits is tried ("289" -> "2"|"89%")
+ * and the split whose math matches the percent wins. */
 export function parseItemPoints(
 	grade: string | null | undefined
 ): { earned: number; possible: number } | undefined {
 	if (!grade) return undefined;
 	const t = grade.trim().replace(/\s+/g, ' ');
 	if (isUngradedToken(t)) return undefined;
+
+	const agrees = (earned: number, possible: number, pct: number) =>
+		possible > 0 && Math.abs((earned / possible) * 100 - pct) <= 0.6;
+
 	const m = t.match(POINTS_RE);
-	if (m) {
-		const earned = parseFloat(m[1] ?? '');
-		const possible = parseFloat(m[2] ?? '');
-		if (!isNaN(earned) && !isNaN(possible)) return { earned, possible };
+	const earned = m ? parseFloat(m[1] ?? '') : NaN;
+	const denomRaw = m?.[2] ?? '';
+	const possible = m ? parseFloat(denomRaw) : NaN;
+
+	if (m && !isNaN(earned) && !isNaN(possible)) {
+		// Collect every percent in the string ("1.78 / 2 89%", "18 / 20 (90%)", ...).
+		const pcts: number[] = [];
+		const pctRe = new RegExp(PCT_ANY_RE, 'g');
+		let pm: RegExpExecArray | null;
+		while ((pm = pctRe.exec(t)) !== null) {
+			const v = parseFloat(pm[1] ?? '');
+			if (!isNaN(v)) pcts.push(v);
+		}
+		if (pcts.length === 0) return { earned, possible };
+		if (pcts.some((p) => agrees(earned, possible, p))) return { earned, possible };
+
+		// Glued fusion? Try every split of a pure-digit denominator ("289" ->
+		// "2"|"89", "28"|"9"), longest denominator first.
+		if (/^\d+$/.test(denomRaw)) {
+			for (let len = denomRaw.length - 1; len >= 1; len--) {
+				const b = parseFloat(denomRaw.slice(0, len));
+				const p = parseFloat(denomRaw.slice(len));
+				if (!isNaN(b) && !isNaN(p) && agrees(earned, b, p)) {
+					return { earned, possible: b };
+				}
+			}
+		}
+		// Irreconcilable: exclude rather than inject wrong-weighted points.
+		return undefined;
 	}
 	const p = t.match(PCT_ANY_RE);
 	if (p) {
@@ -243,6 +287,21 @@ export function getSchoologyCategories(
 	});
 }
 
+/** Schoology pads empty comments with an invisible braille-blank "⠇". */
+function cleanComment(comment: string | null | undefined): string | undefined {
+	if (!comment) return undefined;
+	const stripped = comment.replace(/⠇/g, '').trim();
+	return stripped ? comment : undefined;
+}
+
+/** Schoology leaks button text ("stats. Opens a dialog.") into some titles. */
+function cleanTitle(title: string): string {
+	return title
+		.replace(/\s*stats\.\s*opens a dialog\.?\s*$/i, '')
+		.replace(/\s*opens a dialog\.?\s*$/i, '')
+		.trim();
+}
+
 export function parseSchoologyItem(
 	item: SchoologyItem,
 	categoryName: string,
@@ -251,7 +310,7 @@ export function parseSchoologyItem(
 ): RealAssignment {
 	const pts = parseItemPoints(item.grade);
 	return {
-		name: item.title,
+		name: cleanTitle(item.title),
 		id: uniqueId,
 		pointsEarned: pts?.earned,
 		pointsPossible: pts?.possible,
@@ -264,7 +323,7 @@ export function parseSchoologyItem(
 		date: parseSchoologyDate(item.due_date),
 		newHypothetical: false,
 		description: item.description ?? undefined,
-		comments: item.comment ?? undefined
+		comments: cleanComment(item.comment)
 	};
 }
 

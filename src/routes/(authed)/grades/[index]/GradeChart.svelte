@@ -43,7 +43,7 @@
 	});
 </script>
 
-<Chart.Container config={{}} class="m-4 aspect-auto h-64">
+<Chart.Container config={{}} class="m-4 aspect-auto h-80">
 	<AreaChart data={chartData} x="x" y="grade" yDomain={null}>
 		{#snippet tooltip()}
 			<Chart.Tooltip
@@ -80,9 +80,4 @@
 			<Points r={4} class={error ? 'fill-chart-error' : 'fill-chart'} />
 		{/snippet}
 	</AreaChart>
-	{#if sequential}
-		<p class="text-muted-foreground mt-1 text-center text-xs">
-			In listed order — Schoology gave no dates for this work.
-		</p>
-	{/if}
 </Chart.Container>

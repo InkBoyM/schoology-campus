@@ -55,7 +55,7 @@
 			</Table.Row>
 		</Table.Header>
 		<Table.Body>
-			{#each gradeCategories as { name, pointsEarned, pointsPossible, gradeLetter, weightPercentage } (name)}
+			{#each gradeCategories as { name, pointsEarned, pointsPossible, gradeLetter, weightPercentage }, i (name + ':' + i)}
 				<Table.Row>
 					<Table.Cell>{name}</Table.Cell>
 					<Table.Cell>{weightPercentage}%</Table.Cell>

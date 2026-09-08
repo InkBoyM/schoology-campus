@@ -86,7 +86,7 @@
 		{/if}
 
 		<ol class="flex flex-col items-center gap-4">
-			{#each courses as course, index (course.id)}
+			{#each courses as course, index (course.id + ':' + index)}
 				{@const grade = getSchoologyCourseGrade(course, activeTitle)}
 				{@const unseen = getSchoologyAssignments(course, activeTitle).filter(({ id }) => !seenAssignmentIDs.has(id)).length}
 				<li class="w-full max-w-3xl">

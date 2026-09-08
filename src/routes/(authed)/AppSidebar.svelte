@@ -124,7 +124,7 @@
 				<svelte:boundary>
 					{#if courses}
 						<Sidebar.MenuSub>
-							{#each courses as course, index (course.id)}
+							{#each courses as course, index (course.id + ':' + index)}
 								<Sidebar.MenuSubItem>
 									<Sidebar.MenuSubButton
 										class="h-8 truncate text-base {page.params.index === index.toString()

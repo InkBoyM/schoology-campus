@@ -210,12 +210,13 @@ export function getSchoologyCategories(
 export function parseSchoologyItem(
 	item: SchoologyItem,
 	categoryName: string,
-	courseId: string
+	courseId: string,
+	uniqueId: string
 ): RealAssignment {
 	const pts = parseItemPoints(item.grade);
 	return {
 		name: item.title,
-		id: `${courseId}:${item.id}`,
+		id: uniqueId,
 		pointsEarned: pts?.earned,
 		pointsPossible: pts?.possible,
 		unscaledPoints: undefined,
@@ -237,8 +238,26 @@ export function getSchoologyAssignments(
 ): RealAssignment[] {
 	const period = getCourseActivePeriod(course, activeTitle);
 	if (!period) return [];
+	// Schoology rows don't always carry unique ids (some lack data-id, and the
+	// same assignment can appear twice), but the UI keys lists by assignment id.
+	// Guarantee uniqueness deterministically so keys are stable across reloads.
+	const seen = new Set<string>();
+	let n = 0;
+	const uniqueId = (raw: string | null | undefined): string => {
+		const base = raw?.trim() ? `${course.id}:${raw.trim()}` : `${course.id}:row`;
+		if (!seen.has(base)) {
+			seen.add(base);
+			return base;
+		}
+		let candidate: string;
+		do {
+			candidate = `${base}#${n++}`;
+		} while (seen.has(candidate));
+		seen.add(candidate);
+		return candidate;
+	};
 	return (period.categories ?? []).flatMap((cat) =>
-		(cat.items ?? []).map((item) => parseSchoologyItem(item, cat.title, course.id))
+		(cat.items ?? []).map((item) => parseSchoologyItem(item, cat.title, course.id, uniqueId(item.id)))
 	);
 }
 

@@ -88,8 +88,7 @@
 			<img src="/favicon.svg" class="h-8 w-8" alt={brand} />
 			<h1 class="text-xl font-bold">Import grades from Schoology</h1>
 			<p class="text-muted-foreground text-center text-sm">
-				Uses your existing Schoology login in your own browser. No password is typed here and
-				nothing is sent to any server — the data goes straight into this page.
+				follow the instructions below
 			</p>
 		</div>
 

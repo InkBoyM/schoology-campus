@@ -31,9 +31,7 @@
 				<img src="/favicon.svg" class="h-8 w-8" alt={brand} />
 
 				<h1 class="text-xl font-bold">Log in to {brand}</h1>
-				<p class="text-muted-foreground text-center text-sm">
-					Same GradeCompass grade calculator, powered by Schoology data.
-				</p>
+				<p class="text-muted-foreground text-center text-sm">Based on Gradecompass</p>
 			</div>
 
 			<Button size="lg" variant="card" class="w-full" onclick={goImport}>
@@ -42,18 +40,18 @@
 
 			<Alert.Root>
 				<BookmarkIcon />
-				<Alert.Title class="line-clamp-none">One click, no password</Alert.Title>
+				<Alert.Title class="line-clamp-none">Step 1: add the bookmarklet</Alert.Title>
 				<Alert.Description>
-					Install the bookmarklet once, then click it on your Schoology grades page. It
-					reads the grades already open in your browser — nothing is sent to any server.
+					Add the bookmarklet to your bookmarks bar then click it
 				</Alert.Description>
 			</Alert.Root>
 
 			<Alert.Root>
 				<InfoIcon />
-				<Alert.Title class="line-clamp-none">Your grades stay on this device</Alert.Title>
+				<Alert.Title class="line-clamp-none">Privacy</Alert.Title>
 				<Alert.Description>
-					Imported grades are stored only in this browser. Clearing site data logs you out.
+					im not a scammer i wont sell your data for money cause no data even gets sent to
+					servers
 				</Alert.Description>
 			</Alert.Root>
 		</div>

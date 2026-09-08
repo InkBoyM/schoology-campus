@@ -155,6 +155,9 @@ def parse_grades_html(html_content: str) -> List[Dict[str, Any]]:
                     current_period["categories"].append(current_category)
 
             elif "item-row" in classes:
+                # Hidden "Add Assignment" action rows are not real assignments.
+                if row_title.strip().lower() == "add assignment" and not data_id and not link:
+                    continue
                 item_data = {
                     "id": data_id,
                     "title": row_title,

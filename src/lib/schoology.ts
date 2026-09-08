@@ -333,6 +333,12 @@ export function getSchoologyAssignments(
 ): RealAssignment[] {
 	const period = getCourseActivePeriod(course, activeTitle);
 	if (!period) return [];
+	// Schoology renders hidden "Add Assignment" action rows inside the report
+	// (empty id, no link). They are not real assignments — drop them.
+	const isActionRow = (item: SchoologyItem) =>
+		item.title.trim().toLowerCase() === 'add assignment' &&
+		!item.id?.trim() &&
+		!item.url;
 	// Schoology rows don't always carry unique ids (some lack data-id, and the
 	// same assignment can appear twice), but the UI keys lists by assignment id.
 	// Guarantee uniqueness deterministically so keys are stable across reloads.
@@ -352,7 +358,9 @@ export function getSchoologyAssignments(
 		return candidate;
 	};
 	return (period.categories ?? []).flatMap((cat) =>
-		(cat.items ?? []).map((item) => parseSchoologyItem(item, cat.title, course.id, uniqueId(item.id)))
+		(cat.items ?? [])
+			.filter((item) => !isActionRow(item))
+			.map((item) => parseSchoologyItem(item, cat.title, course.id, uniqueId(item.id)))
 	);
 }
 

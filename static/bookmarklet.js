@@ -131,6 +131,8 @@
         }
         currentPeriod.categories.push(currentCategory);
       } else if (classes.indexOf('item-row') !== -1) {
+        // Hidden "Add Assignment" action rows are not real assignments.
+        if (/^add assignment$/i.test(rowTitle) && !dataId && !link) continue;
         var item = { id: dataId, title: rowTitle, grade: gradeText, due_date: dueDate, comment: commentText, url: link };
         if (!currentCategory) {
           if (!currentPeriod) {

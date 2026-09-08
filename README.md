@@ -26,7 +26,35 @@ Three ways to load grades (login page):
    login page. Fully offline.
 3. **Demo.** Built-in sample data, no login.
 
-## Quick start
+## Publish to GitHub
+
+```bash
+cd schoology-compass
+git remote add origin https://github.com/YOUR-USERNAME/schoology-compass.git
+git branch -M main
+git push -u origin main
+```
+
+## Host on Koyeb (public link anyone can use)
+
+The repo ships a `Dockerfile`: Koyeb builds it and runs one container where
+FastAPI serves both the API and the static site on `$PORT`.
+
+1. Push to GitHub (above).
+2. In Koyeb: **Create Service → GitHub** → pick the repo → **Builder: Dockerfile**.
+3. Expose port **8000** with route `/:8000` (Koyeb sets `$PORT` automatically).
+4. Health check path: `/api/health`. Nano instance is enough. Deploy.
+
+How login works on the hosted site: a server can't complete anyone's Schoology
+SSO, so visitors use the **one-click bookmarklet** on the `/import` page (reads
+the grades page in their own logged-in browser tab — passwords/sessions never
+touch the server) or upload a saved grades page / `grades.json`. All grade data
+stays in each visitor's browser localStorage; the server stores nothing.
+
+> Local live-browser mode still exists for personal use (see Quick start), but
+> it only works when the backend runs on your own computer.
+
+## Local development (your own machine)
 
 ### Easiest (Windows): double-click launchers
 

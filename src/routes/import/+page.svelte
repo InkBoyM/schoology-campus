@@ -234,7 +234,7 @@
 						bind:value={pastedJson}
 						class="font-mono text-xs"
 						rows={4}
-						placeholder='[{"id": "...", "title": "...", ...}]'
+						placeholder={'[{"id": "9000001", "title": "Algebra..."}]'}
 					/>
 				</Field.Field>
 				<Button variant="card" onclick={handlePastedJson} disabled={working || !pastedJson.trim()}>

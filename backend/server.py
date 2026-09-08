@@ -226,12 +226,17 @@ if _FRONTEND_DIR:
 
     @app.get("/{full_path:path}")
     def spa_fallback(full_path: str) -> FileResponse:
-        """Serve static files, falling back to index.html for SPA routes."""
+        """Serve static files, prerendered pages, else index.html for SPA routes."""
         if full_path.startswith("api/"):
             raise HTTPException(status_code=404, detail="unknown API route")
-        candidate = os.path.join(_FRONTEND_DIR, full_path)
-        if full_path and os.path.isfile(candidate):
-            return FileResponse(candidate)
+        if full_path:
+            candidate = os.path.join(_FRONTEND_DIR, full_path)
+            if os.path.isfile(candidate):
+                return FileResponse(candidate)
+            # Prerendered route, e.g. /import -> import.html
+            html_variant = candidate + ".html"
+            if os.path.isfile(html_variant):
+                return FileResponse(html_variant, media_type="text/html")
         return FileResponse(os.path.join(_FRONTEND_DIR, "index.html"), media_type="text/html")
 
 

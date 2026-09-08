@@ -33,7 +33,7 @@
 		{/if}
 	</Alert.Title>
 
-	<Alert.Description class="space-y-2">
+	<Alert.Description>
 		{#if showNumbers}
 			<p>
 				Schoology reports <strong>{round(officialPercentage!)}%</strong>, but the assignments
@@ -43,20 +43,6 @@
 			<p>
 				{brand}'s calculations don't match your official grade percentage. Your official grade
 				shown at the top is still correct, but {brand}'s calculations and charts might be off.
-			</p>
-		{/if}
-
-		<p>Common reasons for the gap:</p>
-		<ul class="list-disc pl-5">
-			<li>Dropped lowest scores — Schoology can drop your lowest assignment(s) in a category</li>
-			<li>Overdue work counted as zero by Schoology but shown as ungraded here</li>
-			<li>Extra credit or manually adjusted grades on Schoology's side</li>
-		</ul>
-
-		{#if !hypotheticalMode}
-			<p>
-				Hypothetical Mode still works — it just starts from the recomputed value above instead of
-				the official one.
 			</p>
 		{/if}
 	</Alert.Description>

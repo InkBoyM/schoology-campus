@@ -1,19 +1,9 @@
 <script lang="ts">
 	import * as Chart from '$lib/components/ui/chart';
-	import {
-		calculateCourseGradePercentageFromCategories,
-		calculateCourseGradePercentageFromTotals,
-		getCalculableAssignments,
-		getCalculableAssignmentsWithCategories,
-		getPointsByCategory,
-		type Assignment,
-		type Calculable,
-		type CalculableWithCategory,
-		type Category
-	} from '$lib/grades/assignments';
+	import { buildChartPoints } from '$lib/grades/chartData';
+	import type { Assignment, Category } from '$lib/grades/assignments';
 	import { cn } from '$lib/utils';
 	import { Area, AreaChart, LinearGradient, Points } from 'layerchart';
-	import { SvelteMap } from 'svelte/reactivity';
 
 	interface Props {
 		assignments: Assignment[];
@@ -27,104 +17,25 @@
 		assignmentsOnDate: Assignment[];
 	}
 
-	const chartData: {
-		date: Date;
-		grade: number;
-	}[] = $derived.by(() => {
-		if (gradeCategories) {
-			const assignmentsByDate: Map<number, CalculableWithCategory<Assignment>[]> = new SvelteMap();
+	const points = $derived(buildChartPoints(assignments, gradeCategories));
 
-			const calculableAssignments = getCalculableAssignmentsWithCategories(assignments);
+	const sequential = $derived(points.length > 0 && points[0]?.sequential === true);
 
-			// Assignments without a usable due date have unknown timing; they join
-			// the most recent bucket so their effect still shows without faking a date.
-			const dateless: CalculableWithCategory<Assignment>[] = [];
-			calculableAssignments.forEach((assignment) => {
-				if (assignment.hasDate === false) {
-					dateless.push(assignment);
-					return;
-				}
-				const ms = assignment.date.getTime();
-				const existingAssignments = assignmentsByDate.get(ms) ?? [];
-				assignmentsByDate.set(ms, [...existingAssignments, assignment]);
-			});
-
-			const entries = [...assignmentsByDate.entries()].toSorted(([ms_a], [ms_b]) => ms_a - ms_b);
-
-			if (dateless.length > 0) {
-				const last = entries[entries.length - 1];
-				if (last) last[1].push(...dateless);
-				else entries.push([Date.now(), dateless]);
-			}
-
-			return entries
-				.map(([ms, assignments], i) => {
-					const assignmentsUntil = entries
-						.map((entry) => entry[1])
-						.slice(0, i + 1)
-						.flat();
-
-					const grade = calculateCourseGradePercentageFromCategories(
-						getPointsByCategory(assignmentsUntil),
-						gradeCategories
-					);
-
-					const metadata: DataPointMetadata = {
-						assignmentsOnDate: assignments
-					};
-
-					return { date: new Date(ms), grade, metadata };
-				})
-				.filter((x) => x !== null);
-		} else {
-			const assignmentsByDate: Map<number, Calculable<Assignment>[]> = new SvelteMap();
-
-			const calculableAssignments = getCalculableAssignments(assignments);
-
-			// See above: dateless assignments join the most recent bucket.
-			const dateless: Calculable<Assignment>[] = [];
-			calculableAssignments.forEach((assignment) => {
-				if (assignment.hasDate === false) {
-					dateless.push(assignment);
-					return;
-				}
-				const ms = assignment.date.getTime();
-				const existingAssignments = assignmentsByDate.get(ms) ?? [];
-				assignmentsByDate.set(ms, [...existingAssignments, assignment]);
-			});
-
-			const entries = [...assignmentsByDate.entries()].toSorted(([ms_a], [ms_b]) => ms_a - ms_b);
-
-			if (dateless.length > 0) {
-				const last = entries[entries.length - 1];
-				if (last) last[1].push(...dateless);
-				else entries.push([Date.now(), dateless]);
-			}
-
-			return entries
-				.map(([ms, assignments], i) => {
-					const assignmentsUntil = entries
-						.map((entry) => entry[1])
-						.slice(0, i + 1)
-						.flat();
-
-					const grade = calculateCourseGradePercentageFromTotals(assignmentsUntil);
-
-					const metadata: DataPointMetadata = {
-						assignmentsOnDate: assignments
-					};
-
-					return { date: new Date(ms), grade, metadata };
-				})
-				.filter((x) => x !== null);
-		}
-	});
+	const chartData = $derived(
+		points.map((p) => ({
+			x: p.sequential ? p.x : new Date(p.x),
+			grade: p.grade,
+			metadata: { assignmentsOnDate: p.assignmentsOnDate } satisfies DataPointMetadata
+		}))
+	);
 
 	const dayFormatter = new Intl.DateTimeFormat('en-US', {
 		weekday: 'long',
 		month: 'long',
 		day: 'numeric'
 	});
+
+	const seqFormatter = (value: unknown) => `Assignment ${Number(value) + 1}`;
 
 	const percentFormatter = new Intl.NumberFormat('en-US', {
 		style: 'percent',
@@ -133,10 +44,12 @@
 </script>
 
 <Chart.Container config={{}} class="m-4 aspect-auto h-64">
-	<!-- https://techniq-docs-v2.layerchart.pages.dev/docs -->
-	<AreaChart data={chartData} x="date" y="grade" yDomain={null}>
+	<AreaChart data={chartData} x="x" y="grade" yDomain={null}>
 		{#snippet tooltip()}
-			<Chart.Tooltip labelFormatter={dayFormatter.format} hideIndicator={true}>
+			<Chart.Tooltip
+				labelFormatter={sequential ? seqFormatter : dayFormatter.format}
+				hideIndicator={true}
+			>
 				{#snippet formatter({ value, item })}
 					<div>
 						<p>{percentFormatter.format(Number(value) / 100)}</p>
@@ -167,4 +80,9 @@
 			<Points r={4} class={error ? 'fill-chart-error' : 'fill-chart'} />
 		{/snippet}
 	</AreaChart>
+	{#if sequential}
+		<p class="text-muted-foreground mt-1 text-center text-xs">
+			In listed order — Schoology gave no dates for this work.
+		</p>
+	{/if}
 </Chart.Container>

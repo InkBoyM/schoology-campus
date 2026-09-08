@@ -53,7 +53,34 @@ export interface ParsedCourseGrade {
 
 const LETTER_PCT_RE = /^([A-F][+-]?)\s*\(\s*([\d.]+)%\s*\)$/i;
 const PCT_ONLY_RE = /^([\d.]+)%$/;
-const POINTS_RE = /^(-?[\d.]+)\s*\/\s*(-?[\d.]+)$/;
+const POINTS_RE = /(-?[\d.]+)\s*\/\s*(-?[\d.]+)/;
+const PCT_ANY_RE = /(-?[\d.]+)\s*%/;
+
+/** Tokens that always mean "no usable score", matched against the whole string. */
+const UNGRADED_TOKENS = new Set([
+	'—',
+	'–',
+	'-',
+	'none',
+	'n/a',
+	'na',
+	'not graded',
+	'ungraded',
+	'no grade',
+	'missing',
+	'excused',
+	'incomplete',
+	'exempt',
+	'collected',
+	'draft',
+	'late',
+	'not submitted',
+	'not turned in'
+]);
+
+function isUngradedToken(t: string): boolean {
+	return t === '' || UNGRADED_TOKENS.has(t.toLowerCase());
+}
 
 export function letterForPercentage(pct: number): string {
 	if (pct >= 97) return 'A+';
@@ -75,7 +102,7 @@ export function letterForPercentage(pct: number): string {
 export function parseCourseGradeString(grade: string | null | undefined): ParsedCourseGrade | undefined {
 	if (!grade) return undefined;
 	const t = grade.trim().replace(/\s+/g, ' ');
-	if (t === '' || t === '—' || t === '-' || t.toLowerCase() === 'none') return undefined;
+	if (isUngradedToken(t)) return undefined;
 
 	const mLetter = t.match(LETTER_PCT_RE);
 	if (mLetter) {
@@ -92,19 +119,28 @@ export function parseCourseGradeString(grade: string | null | undefined): Parsed
 	return undefined;
 }
 
-/** Parse "10 / 10" into {earned, possible}. Returns undefined when ungraded. */
+/** Parse "10 / 10" (or "10/10", "Score: 10 / 10", ...) into {earned, possible}.
+ * Falls back to a trailing "95%" as {earned: 95, possible: 100}.
+ * Returns undefined when ungraded. Points are preferred over any status words
+ * (e.g. "0 / 20" counts as a zero even if marked missing). */
 export function parseItemPoints(
 	grade: string | null | undefined
 ): { earned: number; possible: number } | undefined {
 	if (!grade) return undefined;
 	const t = grade.trim().replace(/\s+/g, ' ');
-	if (t === '' || t === '—' || t === '-') return undefined;
+	if (isUngradedToken(t)) return undefined;
 	const m = t.match(POINTS_RE);
-	if (!m) return undefined;
-	const earned = parseFloat(m[1] ?? '');
-	const possible = parseFloat(m[2] ?? '');
-	if (isNaN(earned) || isNaN(possible)) return undefined;
-	return { earned, possible };
+	if (m) {
+		const earned = parseFloat(m[1] ?? '');
+		const possible = parseFloat(m[2] ?? '');
+		if (!isNaN(earned) && !isNaN(possible)) return { earned, possible };
+	}
+	const p = t.match(PCT_ANY_RE);
+	if (p) {
+		const pct = parseFloat(p[1] ?? '');
+		if (!isNaN(pct)) return { earned: pct, possible: 100 };
+	}
+	return undefined;
 }
 
 /** Parse "15%" into 15. */

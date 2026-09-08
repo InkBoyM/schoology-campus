@@ -36,13 +36,26 @@
 
 			const calculableAssignments = getCalculableAssignmentsWithCategories(assignments);
 
+			// Assignments without a usable due date have unknown timing; they join
+			// the most recent bucket so their effect still shows without faking a date.
+			const dateless: CalculableWithCategory<Assignment>[] = [];
 			calculableAssignments.forEach((assignment) => {
+				if (assignment.hasDate === false) {
+					dateless.push(assignment);
+					return;
+				}
 				const ms = assignment.date.getTime();
 				const existingAssignments = assignmentsByDate.get(ms) ?? [];
 				assignmentsByDate.set(ms, [...existingAssignments, assignment]);
 			});
 
 			const entries = [...assignmentsByDate.entries()].toSorted(([ms_a], [ms_b]) => ms_a - ms_b);
+
+			if (dateless.length > 0) {
+				const last = entries[entries.length - 1];
+				if (last) last[1].push(...dateless);
+				else entries.push([Date.now(), dateless]);
+			}
 
 			return entries
 				.map(([ms, assignments], i) => {
@@ -68,13 +81,25 @@
 
 			const calculableAssignments = getCalculableAssignments(assignments);
 
+			// See above: dateless assignments join the most recent bucket.
+			const dateless: Calculable<Assignment>[] = [];
 			calculableAssignments.forEach((assignment) => {
+				if (assignment.hasDate === false) {
+					dateless.push(assignment);
+					return;
+				}
 				const ms = assignment.date.getTime();
 				const existingAssignments = assignmentsByDate.get(ms) ?? [];
 				assignmentsByDate.set(ms, [...existingAssignments, assignment]);
 			});
 
 			const entries = [...assignmentsByDate.entries()].toSorted(([ms_a], [ms_b]) => ms_a - ms_b);
+
+			if (dateless.length > 0) {
+				const last = entries[entries.length - 1];
+				if (last) last[1].push(...dateless);
+				else entries.push([Date.now(), dateless]);
+			}
 
 			return entries
 				.map(([ms, assignments], i) => {

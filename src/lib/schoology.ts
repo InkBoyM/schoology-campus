@@ -198,12 +198,18 @@ export function parseWeight(weight: string | null | undefined): number | undefin
 
 /** Parse Schoology due dates like "8/19/26" or "8/21/26 11:59pm". */
 export function parseSchoologyDate(due: string | null | undefined): Date {
-	if (!due) return new Date();
+	return tryParseSchoologyDate(due) ?? new Date();
+}
+
+/** Same as parseSchoologyDate, but undefined when there is nothing usable. */
+export function tryParseSchoologyDate(due: string | null | undefined): Date | undefined {
+	if (!due) return undefined;
 	const t = due.trim();
+	if (!t) return undefined;
 	// Normalize "8/21/26 11:59pm" -> "8/21/26 11:59 pm" for Date parsing.
 	const normalized = t.replace(/(\d)(am|pm)$/i, '$1 $2');
 	const d = new Date(normalized);
-	return isNaN(d.getTime()) ? new Date() : d;
+	return isNaN(d.getTime()) ? undefined : d;
 }
 
 // ---------------------------------------------------------------------------
@@ -309,6 +315,7 @@ export function parseSchoologyItem(
 	uniqueId: string
 ): RealAssignment {
 	const pts = parseItemPoints(item.grade);
+	const parsedDate = tryParseSchoologyDate(item.due_date);
 	return {
 		name: cleanTitle(item.title),
 		id: uniqueId,
@@ -320,7 +327,8 @@ export function parseSchoologyItem(
 		notForGrade: false,
 		hidden: false,
 		category: categoryName,
-		date: parseSchoologyDate(item.due_date),
+		date: parsedDate ?? new Date(),
+		hasDate: parsedDate !== undefined,
 		newHypothetical: false,
 		description: item.description ?? undefined,
 		comments: cleanComment(item.comment)

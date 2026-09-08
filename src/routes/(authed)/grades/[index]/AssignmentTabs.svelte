@@ -60,7 +60,7 @@
 	<Tabs.Content value="all">
 		<ol class="flex flex-col items-center gap-4">
 			{#if hypotheticalMode}
-				{#each reactiveAssignments as { id, gradePercentageChange, hidden, newHypothetical, date, comments, category }, i (id)}
+				{#each reactiveAssignments as { id, gradePercentageChange, hidden, newHypothetical, date, hasDate, comments, category }, i (id)}
 					{#if reactiveAssignments[i]}
 						<li class="w-full max-w-4xl">
 							{#if gradeCategories && categoryDropdownOptions}
@@ -79,7 +79,7 @@
 										names: categoryDropdownOptions,
 										colors: assignmentCategoryColors
 									}}
-									{date}
+									{date} hasDate={hasDate}
 									{comments}
 									editable={true}
 									{recalculateGradePercentage}
@@ -101,7 +101,7 @@
 												color: assignmentCategoryColors.get(category) ?? 'default'
 											}
 										: undefined}
-									{date}
+									{date} hasDate={hasDate}
 									{comments}
 									editable={true}
 									{recalculateGradePercentage}
@@ -122,7 +122,7 @@
 		<Tabs.Content value={categoryName}>
 			<ol class="flex flex-col items-center gap-4">
 				{#if hypotheticalMode}
-					{#each reactiveAssignments as { category, id, gradePercentageChange, hidden, newHypothetical, date, comments }, i (id)}
+					{#each reactiveAssignments as { category, id, gradePercentageChange, hidden, newHypothetical, date, hasDate, comments }, i (id)}
 						{#if category === categoryName && reactiveAssignments[i]}
 							<li class="w-full max-w-4xl">
 								{#if gradeCategories && categoryDropdownOptions && reactiveAssignments[i].category !== undefined}
@@ -141,7 +141,7 @@
 											names: categoryDropdownOptions,
 											colors: assignmentCategoryColors
 										}}
-										{date}
+										{date} hasDate={hasDate}
 										{comments}
 										editable={true}
 										{recalculateGradePercentage}
@@ -157,7 +157,7 @@
 										bind:notForGrade={reactiveAssignments[i].notForGrade}
 										{hidden}
 										showHypotheticalLabel={newHypothetical}
-										{date}
+										{date} hasDate={hasDate}
 										{comments}
 										editable={true}
 										{recalculateGradePercentage}
@@ -191,6 +191,7 @@
 		hidden,
 		category,
 		date,
+		hasDate,
 		newHypothetical,
 		description,
 		comments
@@ -213,7 +214,7 @@
 			categoryBadge={showCategory
 				? { name: category, color: assignmentCategoryColors.get(category) ?? 'default' }
 				: undefined}
-			{date}
+			{date} hasDate={hasDate}
 			{comments}
 			unseen={seenAssignmentIDs && !seenAssignmentIDs.has(id) && !hidden}
 		/>

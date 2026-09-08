@@ -21,6 +21,8 @@ export interface Assignment {
 	hidden: boolean;
 	category: string | undefined;
 	date: Date;
+	/** false when Schoology supplied no usable due date (grade math unaffected) */
+	hasDate?: boolean;
 	newHypothetical: boolean;
 	description?: string;
 	comments?: string;

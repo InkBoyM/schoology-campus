@@ -28,6 +28,7 @@
 		showHypotheticalLabel?: boolean;
 		categoryBadge?: { name: string; color: BadgeColor };
 		date?: Date | undefined;
+		hasDate?: boolean;
 		editable?: boolean;
 		unseen?: boolean;
 		comments?: string;
@@ -60,6 +61,7 @@
 		categoryDropdownSelected = $bindable(undefined),
 		categoryDropdown,
 		date = undefined,
+		hasDate = true,
 		editable = false,
 		unseen = false,
 		comments = undefined,
@@ -231,7 +233,7 @@
 				<Badge variant="outline">Hypothetical</Badge>
 			{/if}
 
-			{#if date}
+			{#if date && hasDate !== false}
 				<DateBadge {date} />
 			{/if}
 

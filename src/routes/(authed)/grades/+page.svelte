@@ -2,8 +2,13 @@
 	import { onMount } from 'svelte';
 	import { cleanCourseName, getSchoologyCourseGrade } from '$lib/schoology';
 	import {
+		courseKey,
 		getActivePeriodTitle,
+		getOrderedCourses,
 		initializeSchoologyCatalog,
+		isCustomOrder,
+		moveOrderedCourse,
+		resetCourseOrder,
 		resetSchoologyPeriod,
 		schoologyState,
 		switchSchoologyPeriod
@@ -15,6 +20,7 @@
 	import { seenAssignmentIDs } from '$lib/grades/seenAssignments.svelte';
 	import { getSchoologyAssignments } from '$lib/schoology';
 	import CircleXIcon from '@lucide/svelte/icons/circle-x';
+	import GripVerticalIcon from '@lucide/svelte/icons/grip-vertical';
 	import CourseButton from './CourseButton.svelte';
 	import ReportPeriodSwitcher from './ReportPeriodSwitcher.svelte';
 
@@ -22,7 +28,7 @@
 		initializeSchoologyCatalog();
 	});
 
-	const courses = $derived(schoologyState.courses);
+	const courses = $derived(getOrderedCourses());
 	const periodTitles = $derived(schoologyState.periodTitles);
 	const activeIndex = $derived(schoologyState.activePeriodIndex);
 	const activeTitle = $derived(getActivePeriodTitle());
@@ -49,6 +55,40 @@
 			);
 		});
 		saveSeenAssignmentsToLocalStorage(seenAssignmentIDs);
+	}
+
+	let dragFrom: number | undefined = $state();
+
+	function onDragStart(event: DragEvent, index: number) {
+		// Only the grip handle starts a drag; anything else behaves as a click.
+		if (!(event.target as HTMLElement).closest?.('[data-drag-handle]')) {
+			event.preventDefault();
+			return;
+		}
+		dragFrom = index;
+		if (event.dataTransfer) {
+			event.dataTransfer.effectAllowed = 'move';
+			try {
+				event.dataTransfer.setData('text/plain', String(index));
+			} catch {
+				// ignore
+			}
+		}
+	}
+
+	function onDragOver(event: DragEvent) {
+		event.preventDefault();
+		if (event.dataTransfer) event.dataTransfer.dropEffect = 'move';
+	}
+
+	function onDrop(event: DragEvent, index: number) {
+		event.preventDefault();
+		if (dragFrom !== undefined && dragFrom !== index) moveOrderedCourse(dragFrom, index);
+		dragFrom = undefined;
+	}
+
+	function onDragEnd() {
+		dragFrom = undefined;
 	}
 </script>
 
@@ -86,23 +126,45 @@
 		{/if}
 
 		<ol class="flex flex-col items-center gap-4">
-			{#each courses as course, index (course.id + ':' + index)}
+			{#each courses as course, index (courseKey(course, schoologyState.courses?.indexOf(course) ?? index))}
 				{@const grade = getSchoologyCourseGrade(course, activeTitle)}
 				{@const unseen = getSchoologyAssignments(course, activeTitle).filter(({ id }) => !seenAssignmentIDs.has(id)).length}
-				<li class="w-full max-w-3xl">
-					<CourseButton
-						{index}
-						name={cleanCourseName(course.title)}
-						period={activeTitle}
-						room={`ID ${course.id}`}
-						teacher=""
-						teacherEmail=""
-						unseenAssignmentsCount={unseen}
-						grade={grade ? { letter: grade.letter, percentage: grade.percentage } : undefined}
-					/>
+				<li
+					class={['flex w-full max-w-3xl items-stretch gap-1', dragFrom === index && 'opacity-50']}
+					draggable="true"
+					ondragstart={(e) => onDragStart(e, index)}
+					ondragover={onDragOver}
+					ondrop={(e) => onDrop(e, index)}
+					ondragend={onDragEnd}
+				>
+					<span
+						data-drag-handle
+						title="Drag to reorder"
+						class="text-muted-foreground flex cursor-grab items-center px-1 active:cursor-grabbing"
+					>
+						<GripVerticalIcon class="h-5 w-5" />
+					</span>
+					<div class="min-w-0 flex-1">
+						<CourseButton
+							{index}
+							name={cleanCourseName(course.title)}
+							period={activeTitle}
+							room={`ID ${course.id}`}
+							teacher=""
+							teacherEmail=""
+							unseenAssignmentsCount={unseen}
+							grade={grade ? { letter: grade.letter, percentage: grade.percentage } : undefined}
+						/>
+					</div>
 				</li>
 			{/each}
 		</ol>
+
+		{#if isCustomOrder()}
+			<div class="flex justify-center">
+				<Button variant="ghost" size="sm" onclick={resetCourseOrder}>Reset class order</Button>
+			</div>
+		{/if}
 
 		{#if courses && totalUnseenAssignments > 0}
 			<Alert.Root class="mx-auto flex w-fit items-center gap-4 shadow-lg/30">

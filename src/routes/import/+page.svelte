@@ -5,30 +5,23 @@
 	import BackButton from '$lib/components/BackButton.svelte';
 	import LoadingBanner from '$lib/components/LoadingBanner.svelte';
 	import * as Alert from '$lib/components/ui/alert';
-	import { Button } from '$lib/components/ui/button';
 	import * as Card from '$lib/components/ui/card';
-	import * as Field from '$lib/components/ui/field';
-	import { Input } from '$lib/components/ui/input';
-	import { Textarea } from '$lib/components/ui/textarea';
 	import { loadFromJson } from '$lib/schoologyCatalog.svelte';
 	import type { SchoologyCourse } from '$lib/schoology';
 	import AlertCircleIcon from '@lucide/svelte/icons/alert-circle';
 	import BookmarkIcon from '@lucide/svelte/icons/bookmark';
-	import FileUpIcon from '@lucide/svelte/icons/file-up';
 	import { onMount } from 'svelte';
 	import { fly } from 'svelte/transition';
 
 	let error: string | undefined = $state();
 	let working = $state(false);
-	let workingMessage = $state('Importing...');
 	let bookmarkHref = $state('');
-	let pastedJson = $state('');
 
-	function applyCourses(courses: unknown, source: 'import' | 'upload') {
+	function applyCourses(courses: unknown) {
 		if (!Array.isArray(courses) || courses.length === 0) {
 			throw new Error('No courses found in that data.');
 		}
-		loadFromJson(courses as SchoologyCourse[], { source });
+		loadFromJson(courses as SchoologyCourse[], { source: 'import' });
 		void goto('/grades');
 	}
 
@@ -37,12 +30,11 @@
 		const hash = window.location.hash;
 		if (!hash.startsWith('#g=')) return false;
 		working = true;
-		workingMessage = 'Importing grades from Schoology...';
 		try {
 			const courses = JSON.parse(decodeURIComponent(hash.slice(3)));
 			// Clear the hash so a refresh doesn't re-import.
 			history.replaceState(null, '', window.location.pathname);
-			applyCourses(courses, 'import');
+			applyCourses(courses);
 			return true;
 		} catch (e) {
 			error = e instanceof Error ? e.message : 'Could not read the imported data.';
@@ -64,54 +56,6 @@
 		}
 	}
 
-	let htmlFile: HTMLInputElement | undefined = $state();
-	let jsonFile: HTMLInputElement | undefined = $state();
-
-	async function handleHtmlFile(event: Event) {
-		const input = event.target as HTMLInputElement;
-		const file = input.files?.[0];
-		if (!file) return;
-		working = true;
-		workingMessage = 'Parsing saved grades page...';
-		error = undefined;
-		try {
-			const html = await file.text();
-			const res = await fetch('/api/grades/parse-html', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ html })
-			});
-			if (!res.ok) throw new Error(`Server ${res.status}: ${await res.text()}`);
-			applyCourses(await res.json(), 'import');
-		} catch (e) {
-			error = e instanceof Error ? e.message : String(e);
-		} finally {
-			working = false;
-			input.value = '';
-		}
-	}
-
-	async function handleJsonFile(event: Event) {
-		const input = event.target as HTMLInputElement;
-		const file = input.files?.[0];
-		if (!file) return;
-		try {
-			applyCourses(JSON.parse(await file.text()), 'upload');
-		} catch (e) {
-			error = e instanceof Error ? e.message : String(e);
-		} finally {
-			input.value = '';
-		}
-	}
-
-	function handlePastedJson() {
-		try {
-			applyCourses(JSON.parse(pastedJson), 'upload');
-		} catch (e) {
-			error = e instanceof Error ? e.message : 'That is not valid grades JSON.';
-		}
-	}
-
 	onMount(() => {
 		if (importFromHash()) return;
 		buildBookmarklet();
@@ -123,7 +67,7 @@
 </svelte:head>
 
 {#if working}
-	<LoadingBanner>{workingMessage}</LoadingBanner>
+	<LoadingBanner>Importing grades from Schoology...</LoadingBanner>
 {/if}
 
 {#if error}
@@ -152,7 +96,7 @@
 		<Card.Root>
 			<Card.Header>
 				<Card.Title class="flex items-center gap-2">
-					<BookmarkIcon class="h-5 w-5" /> Option 1 — One-click bookmarklet (easiest)
+					<BookmarkIcon class="h-5 w-5" /> One-click bookmarklet
 				</Card.Title>
 			</Card.Header>
 			<Card.Content class="space-y-3">
@@ -173,73 +117,8 @@
 						{/if}
 					</li>
 					<li>Log into Schoology and open your <strong>Grades</strong> page.</li>
-					<li>
-						Click the bookmark. {brand} opens with your grades loaded.
-					</li>
+					<li>Click the bookmark. {brand} opens with your grades loaded.</li>
 				</ol>
-			</Card.Content>
-		</Card.Root>
-
-		<Card.Root>
-			<Card.Header>
-				<Card.Title class="flex items-center gap-2">
-					<FileUpIcon class="h-5 w-5" /> Option 2 — Upload a saved grades page
-				</Card.Title>
-			</Card.Header>
-			<Card.Content class="space-y-3 text-sm">
-				<p>
-					On your Schoology grades page, right-click → <strong>Save as</strong> (Webpage,
-					Complete), then upload the <code>.html</code> file here.
-				</p>
-				<input
-					bind:this={htmlFile}
-					type="file"
-					accept="text/html,.html,.htm"
-					class="hidden"
-					onchange={handleHtmlFile}
-				/>
-				<Button variant="outline" onclick={() => htmlFile?.click()} disabled={working}>
-					<FileUpIcon class="h-4 w-4" /> Choose saved grades HTML
-				</Button>
-			</Card.Content>
-		</Card.Root>
-
-		<Card.Root>
-			<Card.Header>
-				<Card.Title class="flex items-center gap-2">
-					<FileUpIcon class="h-5 w-5" /> Option 3 — Paste or upload grades JSON
-				</Card.Title>
-			</Card.Header>
-			<Card.Content class="space-y-3 text-sm">
-				<p>
-					Exported from <code>schoology-cli</code> (<code>python grades.py --json</code>) or
-					similar tools.
-				</p>
-				<input
-					bind:this={jsonFile}
-					type="file"
-					accept="application/json,.json"
-					class="hidden"
-					onchange={handleJsonFile}
-				/>
-				<div class="flex gap-2">
-					<Button variant="outline" onclick={() => jsonFile?.click()} disabled={working}>
-						<FileUpIcon class="h-4 w-4" /> Choose grades.json
-					</Button>
-				</div>
-				<Field.Field>
-					<Field.Label for="pastedJson">Or paste JSON directly</Field.Label>
-					<Textarea
-						id="pastedJson"
-						bind:value={pastedJson}
-						class="font-mono text-xs"
-						rows={4}
-						placeholder={'[{"id": "9000001", "title": "Algebra..."}]'}
-					/>
-				</Field.Field>
-				<Button variant="card" onclick={handlePastedJson} disabled={working || !pastedJson.trim()}>
-					Import pasted JSON
-				</Button>
 			</Card.Content>
 		</Card.Root>
 	</main>

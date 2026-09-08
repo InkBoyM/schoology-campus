@@ -1,7 +1,7 @@
 <svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
 <circle cx="128" cy="128" r="120" fill="#111827"/>
 <circle cx="128" cy="128" r="102" stroke="#38BDF8" stroke-width="22" fill="none"/>
-<polygon points="128,58 152,128 128,198 104,128" fill="#FFFFFF"/>
-<polygon points="128,198 152,128 104,128" fill="#FBBF24"/>
+<polygon points="93,67.4 148.8,116 163,188.6 107.2,140" fill="#FFFFFF"/>
+<polygon points="163,188.6 148.8,116 107.2,140" fill="#FBBF24"/>
 <circle cx="128" cy="128" r="12" fill="#111827"/>
 </svg>

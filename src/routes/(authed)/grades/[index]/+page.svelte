@@ -32,7 +32,7 @@
 		getSchoologyCategories,
 		getSchoologyCourseGrade
 	} from '$lib/schoology';
-	import { getActivePeriodTitle, schoologyState } from '$lib/schoologyCatalog.svelte';
+	import { getActivePeriodTitle, getOrderedCourses } from '$lib/schoologyCatalog.svelte';
 	import { saveSeenAssignmentsToLocalStorage } from '$lib/grades/seenAssignments';
 	import { seenAssignmentIDs } from '$lib/grades/seenAssignments.svelte';
 	import CircleAlertIcon from '@lucide/svelte/icons/circle-alert';
@@ -55,7 +55,7 @@
 	);
 
 	const schoologyCourse = $derived(
-		courseIndex !== undefined ? schoologyState.courses?.[courseIndex] : undefined
+		courseIndex !== undefined ? getOrderedCourses()[courseIndex] : undefined
 	);
 
 	const activeTitle = $derived(getActivePeriodTitle());
@@ -95,10 +95,6 @@
 		...hiddenAssignments,
 		...realAssignments
 	]);
-
-	const hasChartData = $derived(
-		getCalculableAssignments(hypotheticalMode ? reactiveAssignments : realAssignments).length > 0
-	);
 
 	let hypotheticalMode = $state(false);
 
@@ -166,6 +162,12 @@
 
 	const pointsByCategory = $derived(
 		getPointsByCategoryMap(getCalculableAssignmentsWithCategories(reactiveAssignments))
+	);
+
+	const hasChartData = $derived.by(() =>
+		hypotheticalMode
+			? getCalculableAssignments(reactiveAssignments).length > 0
+			: getCalculableAssignments(realAssignments).length > 0
 	);
 
 	function addHypotheticalAssignment() {

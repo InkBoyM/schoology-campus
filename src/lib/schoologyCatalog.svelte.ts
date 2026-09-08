@@ -15,6 +15,7 @@ interface SchoologyPersisted {
 	baseUrl: string;
 	source: SchoologySource;
 	activePeriodIndex?: number;
+	courseOrder?: string[];
 }
 
 const LS_KEY = 'schoology-compass-1';
@@ -33,7 +34,8 @@ export const schoologyState = $state({
 	lastRefresh: undefined as number | undefined,
 	backendUrl: DEFAULT_BACKEND_URL as string,
 	baseUrl: DEFAULT_BASE_URL as string,
-	source: undefined as SchoologySource | undefined
+	source: undefined as SchoologySource | undefined,
+	courseOrder: [] as string[]
 });
 
 export const getActivePeriodTitle = () =>
@@ -47,7 +49,8 @@ function persist() {
 		backendUrl: schoologyState.backendUrl,
 		baseUrl: schoologyState.baseUrl,
 		source: schoologyState.source ?? 'backend',
-		activePeriodIndex: schoologyState.activePeriodIndex
+		activePeriodIndex: schoologyState.activePeriodIndex,
+		courseOrder: schoologyState.courseOrder
 	};
 	try {
 		localStorage.setItem(LS_KEY, JSON.stringify(data));
@@ -56,9 +59,62 @@ function persist() {
 	}
 }
 
+/** Courses in the user's custom drag order (new courses append at the end). */
+export function getOrderedCourses(): SchoologyCourse[] {
+	const courses = schoologyState.courses;
+	if (!courses) return [];
+	if (schoologyState.courseOrder.length === 0) return courses;
+	const byId = new Map(courses.map((c, i) => [`${c.id}:${i}`, c]));
+	const ordered: SchoologyCourse[] = [];
+	const used = new Set<SchoologyCourse>();
+	for (const key of schoologyState.courseOrder) {
+		const c = byId.get(key);
+		if (c && !used.has(c)) {
+			ordered.push(c);
+			used.add(c);
+		}
+	}
+	for (const c of courses) {
+		if (!used.has(c)) ordered.push(c);
+	}
+	return ordered;
+}
+
+/** Unique stable key for a course within the current list (ids may repeat). */
+export function courseKey(course: SchoologyCourse, index: number): string {
+	return `${course.id}:${index}`;
+}
+
+export function setCourseOrder(keys: string[]) {
+	schoologyState.courseOrder = keys;
+	persist();
+}
+
+export function moveOrderedCourse(from: number, to: number) {
+	const ordered = getOrderedCourses();
+	if (from < 0 || to < 0 || from >= ordered.length || to >= ordered.length) return;
+	const [moved] = ordered.splice(from, 1);
+	ordered.splice(to, 0, moved!);
+	const all = schoologyState.courses ?? [];
+	setCourseOrder(ordered.map((c) => courseKey(c, all.indexOf(c))));
+}
+
+export function resetCourseOrder() {
+	schoologyState.courseOrder = [];
+	persist();
+}
+
+export const isCustomOrder = () => schoologyState.courseOrder.length > 0;
+
 function applyCourses(
 	courses: SchoologyCourse[],
-	meta: { backendUrl: string; baseUrl: string; source: SchoologySource; lastRefresh?: number }
+	meta: {
+		backendUrl: string;
+		baseUrl: string;
+		source: SchoologySource;
+		lastRefresh?: number;
+		courseOrder?: string[];
+	}
 ) {
 	schoologyState.courses = courses;
 	schoologyState.periodTitles = getSchoologyPeriodTitles(courses);
@@ -84,6 +140,14 @@ function applyCourses(
 	schoologyState.defaultPeriodIndex = schoologyState.periodTitles.length > 0 ? best : 0;
 	if (schoologyState.activePeriodIndex >= schoologyState.periodTitles.length) {
 		schoologyState.activePeriodIndex = schoologyState.defaultPeriodIndex;
+	}
+
+	// Keep the user's custom order for courses that still exist; new ones append.
+	if (meta.courseOrder !== undefined) {
+		schoologyState.courseOrder = meta.courseOrder;
+	} else if (schoologyState.courseOrder.length > 0) {
+		const valid = new Set(courses.map((c, i) => courseKey(c, i)));
+		schoologyState.courseOrder = schoologyState.courseOrder.filter((k) => valid.has(k));
 	}
 
 	persist();
@@ -118,7 +182,8 @@ export function loadSchoologyFromLocalStorage(): boolean {
 			backendUrl: data.backendUrl ?? DEFAULT_BACKEND_URL,
 			baseUrl: data.baseUrl ?? DEFAULT_BASE_URL,
 			source: data.source ?? 'backend',
-			lastRefresh: data.lastRefresh
+			lastRefresh: data.lastRefresh,
+			courseOrder: data.courseOrder ?? []
 		});
 		if (typeof data.activePeriodIndex === 'number') {
 			schoologyState.activePeriodIndex = data.activePeriodIndex;

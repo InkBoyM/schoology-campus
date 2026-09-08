@@ -4,11 +4,21 @@ Mark: navy disc, full sky-blue progress ring, two-tone compass needle
 (white north, amber south) with navy hub. Original design.
 """
 from PIL import Image, ImageDraw
+import math
 
 NAVY = (17, 24, 39, 255)
 SKY = (56, 189, 248, 255)
 AMBER = (251, 191, 36, 255)
 WHITE = (255, 255, 255, 255)
+
+NEEDLE_TILT_DEG = 30  # clockwise from north
+
+
+def _rot(x, y, cx=128, cy=128, deg=NEEDLE_TILT_DEG):
+    r = math.radians(deg)
+    dx, dy = x - cx, y - cy
+    return (cx + dx * math.cos(r) + dy * math.sin(r),
+            cy - dx * math.sin(r) + dy * math.cos(r))
 
 
 def draw_icon(base: Image.Image, box):
@@ -26,8 +36,9 @@ def draw_icon(base: Image.Image, box):
     C(128, 128, 120, NAVY)
     d.ellipse([x0 + 26 * u, y0 + 26 * u, x0 + 230 * u, y0 + 230 * u],
               outline=SKY, width=int(22 * u))
-    P([(128, 58), (152, 128), (128, 198), (104, 128)], WHITE)
-    P([(128, 198), (152, 128), (104, 128)], AMBER)
+    needle = [_rot(128, 58), _rot(152, 128), _rot(128, 198), _rot(104, 128)]
+    P(needle, WHITE)
+    P([needle[2], needle[1], needle[3]], AMBER)
     C(128, 128, 12, NAVY)
 
 

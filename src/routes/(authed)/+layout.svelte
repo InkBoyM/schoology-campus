@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { browser } from '$app/environment';
 	import { goto } from '$app/navigation';
-	import { page } from '$app/state';
 	import { brand } from '$lib/brand';
 	import BoundaryFailure from '$lib/components/BoundaryFailure.svelte';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
@@ -55,15 +54,12 @@
 				</svelte:boundary>
 			</div>
 
-			{#if page.url.pathname !== '/feedback'}
-				<div class="mt-auto w-full text-xs">
-					<div class="text-muted-foreground mx-auto w-fit p-4 pb-0">
-						<a href="/feedback" class="text-tertiary-foreground">Report an issue</a> •
-						<a href="/feedback" class="text-tertiary-foreground">Suggest a feature</a> •
-						<a href="/feedback" class="text-tertiary-foreground">Provide feedback</a>
-					</div>
+			<div class="mt-auto w-full text-xs">
+				<div class="text-muted-foreground mx-auto w-fit p-4 pb-0">
+					Your grades stay on this device. How it works:
+					<a href="/privacy" class="text-tertiary-foreground underline">Privacy</a>
 				</div>
-			{/if}
+			</div>
 		</Sidebar.Inset>
 	</Sidebar.Provider>
 

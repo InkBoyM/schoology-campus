@@ -4,26 +4,20 @@
 	import { brand, repoLink, upstreamLink } from '$lib/brand';
 	import { Button } from '$lib/components/ui/button';
 	import * as Card from '$lib/components/ui/card';
-	import { loadDemo, loadSchoologyFromLocalStorage } from '$lib/schoologyCatalog.svelte';
+	import { loadSchoologyFromLocalStorage } from '$lib/schoologyCatalog.svelte';
 	import CalculatorIcon from '@lucide/svelte/icons/calculator';
 	import ChartLineIcon from '@lucide/svelte/icons/chart-line';
 	import FolderLockIcon from '@lucide/svelte/icons/folder-lock';
 	import GithubIcon from '@lucide/svelte/icons/github';
-	import PlayIcon from '@lucide/svelte/icons/play';
-	import UploadIcon from '@lucide/svelte/icons/upload';
+	import ImportIcon from '@lucide/svelte/icons/import';
 
 	if (browser && localStorage.getItem('schoology-compass-1') !== null) {
 		loadSchoologyFromLocalStorage();
 		void goto('/grades');
 	}
 
-	async function openDemo() {
-		await loadDemo();
-		void goto('/grades');
-	}
-
-	function goLogin() {
-		void goto('/login');
+	function goImport() {
+		void goto('/import');
 	}
 
 	const features = [
@@ -39,9 +33,9 @@
 			description: `${brand}'s Hypothetical Mode calculates what your grade would be with a score on an assignment, what you need on your final, and much more.`
 		},
 		{
-			icon: UploadIcon,
+			icon: ImportIcon,
 			title: 'Schoology powered',
-			description: `Connects through a local backend built on schoology-cli, or works fully offline by uploading the grades.json export.`
+			description: `One-click import from your Schoology grades page. No password, nothing sent to any server.`
 		},
 		{
 			icon: FolderLockIcon,
@@ -83,11 +77,8 @@
 					</Card.Content>
 
 					<Card.Footer class="flex gap-2">
-						<Button size="lg" variant="card" class="flex-1" onclick={goLogin}>
-							Connect Schoology
-						</Button>
-						<Button size="lg" variant="outline" class="flex-1" onclick={openDemo}>
-							<PlayIcon /> Try demo
+						<Button size="lg" variant="card" class="flex-1" onclick={goImport}>
+							<ImportIcon class="h-5 w-5" /> Import from Schoology
 						</Button>
 					</Card.Footer>
 				</Card.Root>

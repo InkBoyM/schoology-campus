@@ -3,20 +3,19 @@
 	import { cleanCourseName } from '$lib/schoology';
 	import { brand } from '$lib/brand';
 	import { buttonVariants } from '$lib/components/ui/button';
-	import Button from '$lib/components/ui/button/button.svelte';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
 	import { Spinner } from '$lib/components/ui/spinner';
 	import {
+		getOrderedCourses,
 		initializeSchoologyCatalog,
-		logOutSchoology,
-		schoologyState
+		logOutSchoology
 	} from '$lib/schoologyCatalog.svelte';
 	import AppWindowMacIcon from '@lucide/svelte/icons/app-window-mac';
 	import LogOutIcon from '@lucide/svelte/icons/log-out';
-	import MessageSquareWarningIcon from '@lucide/svelte/icons/message-square-warning';
 	import MoonIcon from '@lucide/svelte/icons/moon';
 	import NotebookTextIcon from '@lucide/svelte/icons/notebook-text';
+	import ShieldCheckIcon from '@lucide/svelte/icons/shield-check';
 	import SunIcon from '@lucide/svelte/icons/sun';
 	import UploadIcon from '@lucide/svelte/icons/upload';
 	import { mode, toggleMode } from 'mode-watcher';
@@ -28,7 +27,7 @@
 		logOutSchoology();
 	}
 
-	const courses = $derived(schoologyState.courses);
+	const courses = $derived(getOrderedCourses());
 
 	function installWebApp() {
 		$installPrompt.prompt?.();
@@ -45,10 +44,10 @@
 			onclick: installWebApp,
 			icon: AppWindowMacIcon
 		},
-		feedback: {
-			title: 'Feedback',
-			url: '/feedback',
-			icon: MessageSquareWarningIcon
+		privacy: {
+			title: 'Privacy',
+			url: '/privacy',
+			icon: ShieldCheckIcon
 		},
 		switchSource: {
 			title: 'Switch source',
@@ -102,9 +101,6 @@
 				<img src="/favicon.svg" class="size-6" alt={brand} />
 				<span class="ml-2 text-lg font-bold tracking-tight">
 					{brand}
-					{#if schoologyState.source === 'demo'}
-						<span class="text-muted-foreground">Demo</span>
-					{/if}
 				</span>
 			</div>
 		</Sidebar.MenuItem>
@@ -154,17 +150,6 @@
 
 			{@render menuItem(data.switchSource)}
 		</Sidebar.Menu>
-
-		<Sidebar.MenuItem class="mx-2 mt-auto">
-			<Button
-				href="/privacy"
-				variant="ghost"
-				class="text-muted-foreground h-auto border py-3 text-xs whitespace-normal"
-			>
-				Your grades stay on your device. The local backend talks to Schoology from your own
-				computer.
-			</Button>
-		</Sidebar.MenuItem>
 	</Sidebar.Content>
 
 	<Sidebar.Footer>
@@ -175,20 +160,12 @@
 				</div>
 			{/if}
 
-			{@render menuItem(data.feedback)}
+			{@render menuItem(data.privacy)}
 
 			<Sidebar.MenuItem>
 				<Sidebar.MenuButton class="h-10 text-base">
 					{#snippet child({ props })}
 						<div class="flex items-center gap-1">
-							<span class="text-muted-foreground px-2 text-sm">
-								{schoologyState.source === 'demo'
-									? 'Demo data'
-									: schoologyState.source === 'upload' || schoologyState.source === 'import'
-										? 'Imported'
-										: 'Schoology live'}
-							</span>
-
 							<DropdownMenu.Root>
 								<DropdownMenu.Trigger class={buttonVariants({ variant: 'ghost', size: 'icon-lg' })}>
 									<span class="sr-only">Settings</span>

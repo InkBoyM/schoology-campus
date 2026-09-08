@@ -1,0 +1,9 @@
+node_modules
+.svelte-kit
+build
+.git
+backend/.browser_profile
+.browser_profile
+*.log
+.DS_Store
+Thumbs.db

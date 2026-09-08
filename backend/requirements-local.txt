@@ -1,0 +1,6 @@
+# Local full-power mode (live browser fetch on your own machine):
+#   pip install -r backend/requirements-local.txt
+#   playwright install chromium
+-r requirements.txt
+# playwright pip package is already above; the browsers (not pip-installable)
+# come from the `playwright install chromium` step.

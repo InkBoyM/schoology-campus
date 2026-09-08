@@ -1,0 +1,8 @@
+# Hosted deployment (Koyeb/Docker): API + static frontend, NO browsers.
+# Live Playwright endpoints answer 501 here; users import via bookmarklet/upload.
+fastapi>=0.110
+uvicorn>=0.29
+pydantic>=2.0
+requests
+beautifulsoup4
+playwright

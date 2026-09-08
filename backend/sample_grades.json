@@ -1,0 +1,175 @@
+[
+  {
+    "id": "9000001",
+    "title": "Algebra 2/Trig - 101: Rivera p5 T1",
+    "grade": "A ( 94.92% )",
+    "periods": [
+      {
+        "id": "1159172",
+        "title": "26-27 T1",
+        "weight": "100%",
+        "grade": "A ( 94.92% )",
+        "categories": [
+          {
+            "id": "1159172-94406961",
+            "title": "Assignments",
+            "weight": "40%",
+            "grade": "A ( 96.67% )",
+            "items": [
+              {
+                "id": "I-81000001",
+                "title": "A2T - CW/HW1 - Math Survey",
+                "grade": "10 / 10",
+                "due_date": "8/19/26",
+                "comment": null,
+                "url": "/assignment/81000001/info"
+              },
+              {
+                "id": "I-81000002",
+                "title": "A2T - CW/HW2 - Functions Review",
+                "grade": "19 / 20",
+                "due_date": "8/21/26 11:59pm",
+                "comment": "turned in 8/21",
+                "url": "/assignment/81000002/info"
+              },
+              {
+                "id": "I-81000003",
+                "title": "A2T - CW/HW3 - Quadratics Practice",
+                "grade": null,
+                "due_date": "9/12/26 11:59pm",
+                "comment": null,
+                "url": "/assignment/81000003/info"
+              }
+            ]
+          },
+          {
+            "id": "1159172-94406962",
+            "title": "Tests & Quizzes",
+            "weight": "60%",
+            "grade": "A ( 93.75% )",
+            "items": [
+              {
+                "id": "I-81000004",
+                "title": "A2T - Quiz 1 - Functions",
+                "grade": "28 / 30",
+                "due_date": "8/29/26",
+                "comment": null,
+                "url": "/assignment/81000004/info"
+              },
+              {
+                "id": "I-81000005",
+                "title": "A2T - Test 1 - Quadratics",
+                "grade": "47 / 50",
+                "due_date": "9/05/26",
+                "comment": "nice work",
+                "url": "/assignment/81000005/info"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "9000002",
+    "title": "Comp Prog Java - 2370: Chen p2 T1",
+    "grade": "B+ ( 87.88% )",
+    "periods": [
+      {
+        "id": "1159172",
+        "title": "26-27 T1",
+        "weight": "100%",
+        "grade": "B+ ( 87.88% )",
+        "categories": [
+          {
+            "id": "1159172-94406970",
+            "title": "Labs",
+            "weight": "70%",
+            "grade": "A- ( 91.25% )",
+            "items": [
+              {
+                "id": "I-82000001",
+                "title": "Java: Lab_HardwareMap",
+                "grade": "36 / 40",
+                "due_date": "8/27/26 11:59pm",
+                "comment": "On time",
+                "url": "/assignment/82000001/info"
+              },
+              {
+                "id": "I-82000002",
+                "title": "Java: Lab_Loops",
+                "grade": "37 / 40",
+                "due_date": "9/03/26 11:59pm",
+                "comment": null,
+                "url": "/assignment/82000002/info"
+              }
+            ]
+          },
+          {
+            "id": "1159172-94406971",
+            "title": "Tests & Quizzes",
+            "weight": "30%",
+            "grade": "B- ( 80.00% )",
+            "items": [
+              {
+                "id": "I-82000003",
+                "title": "Java: Quiz 1 - Syntax",
+                "grade": "32 / 40",
+                "due_date": "8/22/26",
+                "comment": null,
+                "url": "/assignment/82000003/info"
+              },
+              {
+                "id": "I-82000004",
+                "title": "Java: Unit Test - OOP",
+                "grade": null,
+                "due_date": "9/15/26 11:59pm",
+                "comment": null,
+                "url": "/assignment/82000004/info"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "9000003",
+    "title": "Biology - 305: Patel p4 T1",
+    "grade": null,
+    "periods": [
+      {
+        "id": "1159172",
+        "title": "26-27 T1",
+        "weight": null,
+        "grade": null,
+        "categories": [
+          {
+            "id": "1159172-94406980",
+            "title": "Classwork",
+            "weight": null,
+            "grade": "100%",
+            "items": [
+              {
+                "id": "I-83000001",
+                "title": "Bio - Lab Safety Worksheet",
+                "grade": "10 / 10",
+                "due_date": "8/20/26",
+                "comment": null,
+                "url": "/assignment/83000001/info"
+              },
+              {
+                "id": "I-83000002",
+                "title": "Bio - Cell Diagram",
+                "grade": null,
+                "due_date": "9/10/26",
+                "comment": null,
+                "url": "/assignment/83000002/info"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]

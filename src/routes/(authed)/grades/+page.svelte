@@ -58,10 +58,17 @@
 	}
 
 	let dragFrom: number | undefined = $state();
+	let pressOnHandle = false;
+
+	function onPress(event: PointerEvent) {
+		// dragstart targets the draggable <li>, not the grabbed child, so the
+		// grab origin must be recorded here on pointerdown instead.
+		pressOnHandle = !!(event.target as HTMLElement).closest?.('[data-drag-handle]');
+	}
 
 	function onDragStart(event: DragEvent, index: number) {
 		// Only the grip handle starts a drag; anything else behaves as a click.
-		if (!(event.target as HTMLElement).closest?.('[data-drag-handle]')) {
+		if (!pressOnHandle) {
 			event.preventDefault();
 			return;
 		}
@@ -89,6 +96,7 @@
 
 	function onDragEnd() {
 		dragFrom = undefined;
+		pressOnHandle = false;
 	}
 </script>
 
@@ -132,6 +140,7 @@
 				<li
 					class={['flex w-full max-w-3xl items-stretch gap-1', dragFrom === index && 'opacity-50']}
 					draggable="true"
+					onpointerdown={onPress}
 					ondragstart={(e) => onDragStart(e, index)}
 					ondragover={onDragOver}
 					ondrop={(e) => onDrop(e, index)}

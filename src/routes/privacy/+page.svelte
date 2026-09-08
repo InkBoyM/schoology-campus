@@ -1,11 +1,7 @@
 <script lang="ts">
-	import { browser } from '$app/environment';
-	import { brand, contactEmail } from '$lib/brand';
+	import { brand } from '$lib/brand';
 	import BackButton from '$lib/components/BackButton.svelte';
 	import * as Card from '$lib/components/ui/card';
-
-	let email = $state('[email protected]');
-	if (browser) email = contactEmail;
 </script>
 
 <svelte:head>
@@ -24,33 +20,22 @@
 
 				<Card.Content class="text-tertiary-foreground space-y-4">
 					<p>
-						{brand} is designed to keep students' information private.
+						{brand} is based on
+						<a
+							href="https://github.com/PurelyAnecdotal/gradecompass"
+							target="_blank"
+							rel="noreferrer"
+							class="underline">GradeCompass</a
+						>
 					</p>
 
 					<p>
-						Live Schoology mode runs a backend on your own computer. Your browser talks to
-						that backend, and the backend talks to Schoology from your machine — grades never
-						go through anyone else's server.
+						The bookmarklet stays local it works by reading the Schoology grades page
+						already open and passes the data directly to the app. Nothing gets sent to
+						servers which includes passwords and grades.
 					</p>
 
-					<p>
-						Upload mode never touches the network at all: the grades.json file you export
-						from schoology-cli is parsed locally in your browser and cached in localStorage
-						on your device.
-					</p>
-
-					<p>
-						One-click import (bookmarklet) also stays local: it reads the Schoology grades
-						page already open in your own browser tab and passes the data directly to this
-						app. Our servers never see your Schoology password, session, or grades, and
-						nothing is stored server-side — every visitor's data lives only in their own
-						browser.
-					</p>
-
-					<p>
-						If you have questions or concerns about {brand}, you can contact us at
-						<a href="mailto:{email}" class="underline">{email}</a>.
-					</p>
+					<p>This project is open source on Github</p>
 				</Card.Content>
 			</Card.Root>
 		</div>

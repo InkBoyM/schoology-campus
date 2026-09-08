@@ -39,6 +39,7 @@
 	import CircleXIcon from '@lucide/svelte/icons/circle-x';
 	import Columns3CogIcon from '@lucide/svelte/icons/columns-3-cog';
 	import Grid2x2PlusIcon from '@lucide/svelte/icons/grid-2x2-plus';
+	import InfoIcon from '@lucide/svelte/icons/info';
 	import RotateCCWIcon from '@lucide/svelte/icons/rotate-ccw';
 	import NumberFlow from '@number-flow/svelte';
 	import { untrack } from 'svelte';
@@ -94,6 +95,10 @@
 		...hiddenAssignments,
 		...realAssignments
 	]);
+
+	const hasChartData = $derived(
+		getCalculableAssignments(hypotheticalMode ? reactiveAssignments : realAssignments).length > 0
+	);
 
 	let hypotheticalMode = $state(false);
 
@@ -293,12 +298,24 @@
 	{/if}
 
 	{#snippet chart()}
-		<GradeChart
-			assignments={hypotheticalMode ? reactiveAssignments : realAssignments}
-			{gradeCategories}
-			animate={!hypotheticalMode}
-			error={!rawGradeCalcMatches}
-		/>
+		{#if hasChartData}
+			<GradeChart
+				assignments={hypotheticalMode ? reactiveAssignments : realAssignments}
+				{gradeCategories}
+				animate={!hypotheticalMode}
+				error={!rawGradeCalcMatches}
+			/>
+		{:else}
+			<div class="m-4 flex justify-center">
+				<Alert.Root class="mx-4 w-fit">
+					<InfoIcon />
+					<Alert.Title class="line-clamp-none">Not enough graded assignments to draw the chart yet.</Alert.Title>
+					<Alert.Description>
+						Once Schoology shows scores for this course, your grade history will appear here.
+					</Alert.Description>
+				</Alert.Root>
+			</div>
+		{/if}
 	{/snippet}
 
 	<div class="m-4 flex min-h-9 flex-wrap items-center gap-4">

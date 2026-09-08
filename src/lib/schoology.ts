@@ -153,7 +153,9 @@ export function parseItemPoints(
 	const denomRaw = m?.[2] ?? '';
 	const possible = m ? parseFloat(denomRaw) : NaN;
 
-	if (m && !isNaN(earned) && !isNaN(possible)) {
+	// Zero/negative denominators can only produce Infinity/NaN grade math
+	// (which breaks charts and calculators), so they count as ungraded.
+	if (m && !isNaN(earned) && !isNaN(possible) && possible > 0) {
 		// Collect every percent in the string ("1.78 / 2 89%", "18 / 20 (90%)", ...).
 		const pcts: number[] = [];
 		const pctRe = new RegExp(PCT_ANY_RE, 'g');

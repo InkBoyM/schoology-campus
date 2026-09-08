@@ -72,7 +72,11 @@
 		schoologyCourse ? getSchoologyCategories(schoologyCourse, activeTitle) : undefined
 	);
 
-	const gradeCategories = $derived(categories?.filter((category) => category.name !== 'TOTAL'));
+	const gradeCategories = $derived.by(() => {
+		const cats = categories?.filter((category) => category.name !== 'TOTAL');
+		// A TOTAL-only (or empty) course has no real breakdown — use totals math.
+		return cats && cats.length > 0 ? cats : undefined;
+	});
 
 	const schoologyAssignments: RealAssignment[] = $derived(
 		schoologyCourse ? getSchoologyAssignments(schoologyCourse, activeTitle) : []
@@ -164,11 +168,19 @@
 		getPointsByCategoryMap(getCalculableAssignmentsWithCategories(reactiveAssignments))
 	);
 
-	const hasChartData = $derived.by(() =>
-		hypotheticalMode
-			? getCalculableAssignments(reactiveAssignments).length > 0
-			: getCalculableAssignments(realAssignments).length > 0
-	);
+	const hasChartData = $derived.by(() => {
+		// Mirror exactly what the chart itself will include: category-aware math
+		// drops uncategorized items, so a points-but-no-category hypothetical
+		// must not count as chartable.
+		if (hypotheticalMode) {
+			return gradeCategories
+				? getCalculableAssignmentsWithCategories(reactiveAssignments).length > 0
+				: getCalculableAssignments(reactiveAssignments).length > 0;
+		}
+		return gradeCategories
+			? getCalculableAssignmentsWithCategories(realAssignments).length > 0
+			: getCalculableAssignments(realAssignments).length > 0;
+	});
 
 	function addHypotheticalAssignment() {
 		const newHypotheticalAssignment: NewHypotheticalAssignment = $state({
@@ -184,6 +196,9 @@
 			category: undefined,
 			newHypothetical: true,
 			date: new Date(),
+			// No date was entered, so join the dateless flow instead of
+			// flipping a dateless chart into date mode.
+			hasDate: false,
 			reactive: true
 		});
 

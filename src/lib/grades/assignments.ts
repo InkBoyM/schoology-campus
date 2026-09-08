@@ -404,6 +404,10 @@ export function getCalculableAssignments<T extends Assignment>(assignments: T[])
 
 			if (pointsEarned === undefined || pointsPossible === undefined || notForGrade) return null;
 
+			// A zero denominator can only produce Infinity/NaN grade math
+			// (broken charts, headers, calculators), so it counts as ungraded.
+			if (!(pointsPossible > 0)) return null;
+
 			const calculable: Calculable<T> = {
 				...assignment,
 				pointsEarned,
@@ -428,6 +432,9 @@ export function getCalculableAssignmentsWithCategories<T extends Assignment>(ass
 				category === undefined
 			)
 				return null;
+
+			// See above: zero denominators break all downstream math.
+			if (!(pointsPossible > 0)) return null;
 
 			const calculable: CalculableWithCategory<T> = {
 				...assignment,

@@ -1,32 +1,34 @@
-"""Generate original SchoologyCompass icons (run once, commit outputs)."""
+"""Generate original SchoologyCompass icons (run once, commit outputs).
+
+Mark: navy disc, full sky-blue progress ring, two-tone compass needle
+(white north, amber south) with navy hub. Original design.
+"""
 from PIL import Image, ImageDraw
 
-SIZE = 512
-BG = (29, 78, 216, 255)      # blue-700
-BAR_DIM = (255, 255, 255, 140)
-BAR_MID = (255, 255, 255, 205)
-BAR_TOP = (255, 255, 255, 255)
-ACCENT = (251, 191, 36, 255)  # amber-400
+NAVY = (17, 24, 39, 255)
+SKY = (56, 189, 248, 255)
+AMBER = (251, 191, 36, 255)
+WHITE = (255, 255, 255, 255)
 
 
-def draw_icon(base: Image.Image, scale_box):
+def draw_icon(base: Image.Image, box):
     d = ImageDraw.Draw(base)
-    x0, y0, s = scale_box  # origin + box size (256-unit design space scaled)
+    x0, y0, s = box  # origin + size (256-unit design space scaled)
     u = s / 256.0
 
-    def R(x, y, w, h, r, fill):
-        d.rounded_rectangle([x0 + x * u, y0 + y * u, x0 + (x + w) * u, y0 + (y + h) * u],
-                            radius=r * u, fill=fill)
+    def C(cx, cy, r, fill):
+        d.ellipse([x0 + (cx - r) * u, y0 + (cy - r) * u,
+                   x0 + (cx + r) * u, y0 + (cy + r) * u], fill=fill)
 
-    R(8, 8, 240, 240, 56, BG)
-    R(56, 152, 34, 56, 8, BAR_DIM)
-    R(104, 122, 34, 86, 8, BAR_MID)
-    R(152, 92, 34, 116, 8, BAR_TOP)
-    d.line([x0 + 48 * u, y0 + 176 * u, x0 + 118 * u, y0 + 120 * u,
-            x0 + 150 * u, y0 + 142 * u, x0 + 208 * u, y0 + 76 * u],
-           fill=ACCENT, width=int(18 * u), joint='curve')
-    d.polygon([x0 + 178 * u, y0 + 72 * u, x0 + 212 * u, y0 + 72 * u,
-               x0 + 212 * u, y0 + 106 * u], fill=ACCENT)
+    def P(pts, fill):
+        d.polygon([(x0 + x * u, y0 + y * u) for x, y in pts], fill=fill)
+
+    C(128, 128, 120, NAVY)
+    d.ellipse([x0 + 26 * u, y0 + 26 * u, x0 + 230 * u, y0 + 230 * u],
+              outline=SKY, width=int(22 * u))
+    P([(128, 58), (152, 128), (128, 198), (104, 128)], WHITE)
+    P([(128, 198), (152, 128), (104, 128)], AMBER)
+    C(128, 128, 12, NAVY)
 
 
 def full_bleed(px: int) -> Image.Image:
@@ -36,7 +38,7 @@ def full_bleed(px: int) -> Image.Image:
 
 
 def maskable(px: int) -> Image.Image:
-    img = Image.new('RGBA', (px, px), BG)
+    img = Image.new('RGBA', (px, px), NAVY)
     m = int(px * 0.1)
     draw_icon(img, (m, m, px - 2 * m))
     return img
